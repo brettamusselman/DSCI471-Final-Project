@@ -4,8 +4,9 @@ import logging
 from google.cloud import storage
 
 SOURCE_BUCKET_NAME = "dsci471"
-DEST_DATASET_PREFIX = "reorg_80_20/"
+DEST_DATASET_PREFIX = "reorg_80_10_10/"
 TRAIN_SPLIT_RATIO = 0.8
+VAL_SPLIT_RATIO = 0.1
 
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
@@ -45,7 +46,7 @@ def process_and_split_dataset_gcs():
             for blob in blobs:
                 blob_name_lower = blob.name.lower()
                 if not blob_name_lower.endswith(IMAGE_EXTENSIONS):
-                    if blob_name_lower != current_source_prefix: # Avoid logging the prefix itself if it's listed as a 0-byte object
+                    if blob_name_lower != current_source_prefix:
                          logging.debug(f"Skipping non-image file or directory marker: {blob.name}")
                     continue
 
@@ -77,11 +78,16 @@ def process_and_split_dataset_gcs():
 
         random.shuffle(blob_list)
         
-        split_point = int(len(blob_list) * TRAIN_SPLIT_RATIO)
-        train_blobs = blob_list[:split_point]
-        test_blobs = blob_list[split_point:]
 
-        logging.info(f"Category '{final_category}': {len(train_blobs)} train files, {len(test_blobs)} test files.")
+        total_files = len(blob_list)
+        train_val_split_point = int(total_files * TRAIN_SPLIT_RATIO)
+        val_test_split_point = int(total_files * (TRAIN_SPLIT_RATIO + VAL_SPLIT_RATIO))
+
+        train_blobs = blob_list[:train_val_split_point]
+        val_blobs = blob_list[train_val_split_point:val_test_split_point]
+        test_blobs = blob_list[val_test_split_point:]
+
+        logging.info(f"Category '{final_category}': {len(train_blobs)} train files, {len(val_blobs)} validation files, {len(test_blobs)} test files.")
 
         # Process training files
         for blob in train_blobs:
@@ -90,6 +96,16 @@ def process_and_split_dataset_gcs():
             try:
                 source_bucket.copy_blob(blob, source_bucket, destination_blob_name)
                 logging.debug(f"Copied TRAIN: {blob.name} to gs://{SOURCE_BUCKET_NAME}/{destination_blob_name}")
+            except Exception as e:
+                logging.error(f"Failed to copy {blob.name} to {destination_blob_name}: {e}")
+
+        # Process validation files
+        for blob in val_blobs:
+            original_filename = blob.name.split('/')[-1]
+            destination_blob_name = f"{DEST_DATASET_PREFIX.rstrip('/')}/val/{final_category}/{original_filename}"
+            try:
+                source_bucket.copy_blob(blob, source_bucket, destination_blob_name)
+                logging.debug(f"Copied VALIDATION: {blob.name} to gs://{SOURCE_BUCKET_NAME}/{destination_blob_name}")
             except Exception as e:
                 logging.error(f"Failed to copy {blob.name} to {destination_blob_name}: {e}")
         
