@@ -1,1 +1,7 @@
 Epoch 1/20
+
+      1/Unknown [1m289s[0m 289s/step - accuracy: 0.7188 - loss: 1.0640
+      2/Unknown [1m300s[0m 11s/step - accuracy: 0.7891 - loss: 0.7981 
+      3/Unknown [1m311s[0m 11s/step - accuracy: 0.8281 - loss: 0.6503
+      4/Unknown [1m320s[0m 10s/step - accuracy: 0.8535 - loss: 0.5543
+      5/Unknown [1m331s[0m 10s/step - accuracy: 0.8716 - loss: 0.4860
