@@ -12,3 +12,11 @@ No GPU detected. Testing will run on CPU.
      10/Unknown [1m42s[0m 4s/step - accuracy: 0.4301 - loss: 1.5402
      11/Unknown [1m45s[0m 4s/step - accuracy: 0.4486 - loss: 1.4928
      12/Unknown [1m49s[0m 4s/step - accuracy: 0.4663 - loss: 1.4484
+     13/Unknown [1m52s[0m 4s/step - accuracy: 0.4832 - loss: 1.4068
+     14/Unknown [1m56s[0m 4s/step - accuracy: 0.4981 - loss: 1.3691
+     15/Unknown [1m60s[0m 4s/step - accuracy: 0.5107 - loss: 1.3361
+     16/Unknown [1m64s[0m 4s/step - accuracy: 0.5214 - loss: 1.3066
+     17/Unknown [1m68s[0m 4s/step - accuracy: 0.5301 - loss: 1.2805
+     18/Unknown [1m72s[0m 4s/step - accuracy: 0.5378 - loss: 1.2567
+     19/Unknown [1m74s[0m 4s/step - accuracy: 0.5447 - loss: 1.2350
+[1m19/19[0m [32m━━━━━━━━━━━━━━━━━━━━[0m[37m[0m [1m74s[0m 4s/step - accuracy: 0.5509 - loss: 1.2155
