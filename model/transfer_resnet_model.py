@@ -26,8 +26,8 @@ class TransferResNet50V2:
     def _build_model(self):
         """
         Builds the transfer learning model.
-        Loads ResNet50V2 pre-trained on ImageNet, freezes its layers,
-        and adds a custom classification head.
+        Loads ResNet50V2, freezes its layers,
+        and adds a classification head.
         """
         try:
             self.base_model = ResNet50V2(
@@ -47,7 +47,7 @@ class TransferResNet50V2:
             x = layers.Dense(256, activation='relu', name="custom_dense_1", kernel_initializer='he_normal')(x)
             # x = layers.BatchNormalization(name="custom_bn_1")(x)
             # x = layers.Activation('relu', name="custom_relu_1")(x)
-            x = layers.Dropout(0.2, name="custom_dropout")(x) # Dropout for regularization
+            x = layers.Dropout(0.2, name="custom_dropout")(x)
             outputs = layers.Dense(self.num_classes, activation='softmax', name="custom_predictions", kernel_initializer='glorot_uniform')(x)
             # outputs = layers.Dense(1, activation='sigmoid', name="custom_predictions", kernel_initializer='glorot_uniform')(x) # for binary classification
 

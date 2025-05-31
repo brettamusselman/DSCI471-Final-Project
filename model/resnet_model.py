@@ -4,7 +4,7 @@ from tensorflow.keras.models import Model
 import logging
 from typing import Tuple, List, Union, Optional, Dict
 import os
-from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard
+from tensorflow.keras.callbacks import ModelCheckpoint, TensorBoard, ReduceLROnPlateau 
 import datetime
 
 logger = logging.getLogger(__name__)
@@ -16,10 +16,6 @@ class ResNet_Model():
     def __init__(self, input_shape: Tuple[int, int, int], num_classes: int):
         """
         Initialize the ResNet model.
-
-        Parameters:
-        - input_shape: Shape of the input images (height, width, channels).
-        - num_classes: Number of output classes.
         """
         self.input_shape = input_shape
         self.num_classes = num_classes
@@ -33,16 +29,6 @@ class ResNet_Model():
                                  block_name: Optional[str] = None) -> tf.Tensor:
         """
         Creates a ResNet basic residual blockwith pre-activation.
-
-        Parameters:
-        - x_input: Input tensor.
-        - filters: Number of filters for the convolutional layers in the block.
-        - kernel_size: Kernel size for the convolutional layers.
-        - strides: Strides for the first convolutional layer in the block and for the shortcut if projection is needed.
-        - block_name: Optional string for naming layers within this block.
-
-        Returns:
-        - Output tensor of the residual block.
         """
         if block_name is None:
             block_name = f"b_res_block_{tf.keras.backend.get_uid('b_res_block')}"
@@ -83,11 +69,6 @@ class ResNet_Model():
     def _build_model(self) -> Model:
         """
         Build the ResNet model architecture.
-        Number of blocks: [3, 4, 4, 3] 
-        Filters per stage: [64, 128, 256, 512].
-
-        Returns:
-        - model: Keras Model instance.
         """
         try:
             inputs = Input(shape=self.input_shape)
@@ -98,21 +79,23 @@ class ResNet_Model():
             x = layers.Activation('relu', name='conv1_relu')(x)
             x = layers.MaxPooling2D((3, 3), strides=(2, 2), padding='same', name='pool1_pool')(x)
 
-            x = self._stack_basic(x, filters=64, num_blocks=3, stage_name='conv2', strides_first_block=(1,1))
+            x = self._stack_basic(x, filters=32, num_blocks=1, stage_name='conv2', strides_first_block=(1,1))
 
-            x = self._stack_basic(x, filters=128, num_blocks=4, stage_name='conv3', strides_first_block=(2,2))
+            x = self._stack_basic(x, filters=64, num_blocks=2, stage_name='conv3', strides_first_block=(2,2))
 
-            x = self._stack_basic(x, filters=256, num_blocks=4, stage_name='conv4', strides_first_block=(2,2))
+            x = self._stack_basic(x, filters=128, num_blocks=2, stage_name='conv4', strides_first_block=(2,2))
             
-            x = self._stack_basic(x, filters=512, num_blocks=3, stage_name='conv5', strides_first_block=(2,2))
+            x = self._stack_basic(x, filters=256, num_blocks=1, stage_name='conv5', strides_first_block=(2,2))
 
             # Post-activation before Global Average Pooling
             x = layers.BatchNormalization(axis=-1, epsilon=1.001e-5, name='post_bn')(x)
             x = layers.Activation('relu', name='post_relu')(x)
             
             x = layers.GlobalAveragePooling2D(name='avg_pool')(x)
+            x = layers.Dropout(0.5, name="custom_dropout")(x)
             outputs = layers.Dense(self.num_classes, activation='softmax', 
                                    kernel_initializer='glorot_uniform', name='predictions')(x)
+            # outputs = layers.Dense(1, activation='sigmoid', name="custom_predictions", kernel_initializer='glorot_uniform')(x)
 
             model = Model(inputs=inputs, outputs=outputs, name="resnet_model")
             logger.info("ResNet model built successfully.")
@@ -124,16 +107,10 @@ class ResNet_Model():
     def compile_model(self, 
                       optimizer_name: str = 'adam', 
                       learning_rate: float = 0.001, 
-                      loss: str = 'sparse_categorical_crossentropy', 
+                      loss: any = tf.keras.losses.CategoricalCrossentropy(), 
                       metrics: Optional[List[Union[str, tf.keras.metrics.Metric]]] = None):
         """
         Compile the ResNet model with a specified optimizer and initial learning rate.
-
-        Parameters:
-        - optimizer_name: Name of the optimizer to use.
-        - learning_rate: Initial learning rate for the optimizer.
-        - loss: Loss function to use for training.
-        - metrics: List of metrics to evaluate during training.
         """
         if metrics is None:
             metrics = ['accuracy']
@@ -159,12 +136,6 @@ class ResNet_Model():
                     ):
         """
         Train the ResNet model
-
-        Parameters:
-        - train_data: Training data (tf.data.Dataset).
-        - validation_data: Validation data (tf.data.Dataset).
-        - epochs: Number of epochs to train for.
-        - log_dir: Directory to save TensorBoard logs.
         """
         try:
             timestamp = datetime.datetime.now().strftime("%Y%m%d-%H%M%S")
@@ -172,19 +143,31 @@ class ResNet_Model():
             os.makedirs(current_log_dir, exist_ok=True)
             tensorboard_callback = TensorBoard(log_dir=current_log_dir, histogram_freq=1, profile_batch=0)
 
-            current_checkpoint_dir = os.path.join(current_log_dir, "checkpoint")
-            os.makedirs(current_checkpoint_dir, exist_ok=True)
+            checkpoint_dir = os.path.join(current_log_dir, "checkpoints")
+            os.makedirs(checkpoint_dir, exist_ok=True)
+            checkpoint_filepath = os.path.join(checkpoint_dir, "best_resnet_model_val_loss.keras")
 
             checkpoint_callback = ModelCheckpoint(
-                filepath=current_checkpoint_dir,
+                filepath=checkpoint_filepath,
                 monitor='val_loss',       
                 mode='min',            
                 save_best_only=True,    
                 save_weights_only=False,  
                 verbose=1        
             )
+
+            reduceLr = ReduceLROnPlateau(
+                monitor='val_loss',
+                factor=0.1,
+                patience=10,
+                verbose=1,
+                mode='min',
+                min_delta=0.001,
+                cooldown=0,
+                min_lr=None,
+            )
             
-            callbacks_list = [tensorboard_callback, checkpoint_callback]
+            callbacks_list = [tensorboard_callback, checkpoint_callback, reduceLr]
 
             logger.info(f"Starting model training for {epochs} epochs. Logs will be saved to {current_log_dir}")
             self.model.fit(
