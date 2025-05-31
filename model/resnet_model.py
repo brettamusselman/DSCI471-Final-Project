@@ -15,7 +15,7 @@ if not logger.hasHandlers():
 class ResNet_Model():
     def __init__(self, input_shape: Tuple[int, int, int], num_classes: int):
         """
-        Initialize the ResNet  model.
+        Initialize the ResNet model.
         """
         self.input_shape = input_shape
         self.num_classes = num_classes
@@ -44,7 +44,7 @@ class ResNet_Model():
 
     def _build_model(self) -> Model:
         """
-        Build the ResNet-like model architecture.
+        Build the ResNet model.
         """
         try:
             inputs = Input(shape=self.input_shape)
@@ -88,7 +88,7 @@ class ResNet_Model():
 
     def compile_model(self, optimizer_name: str = 'adam', loss: str = 'categorical_crossentropy', metrics: list = ['accuracy'], learning_rate: float = 0.001):
         """
-        Compile the ResNet-like model.
+        Compile the ResNet model.
         """
         try:
             if optimizer_name.lower() == 'adam':
