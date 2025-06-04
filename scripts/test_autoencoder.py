@@ -11,7 +11,7 @@ from model.autoencoder import LungAutoencoderAnomaly
 from data_loader import csv_image_label_generator
 
 csv_path = "data/all_files_df.csv"
-MODEL_PATH = "/mnt/c/Users/NesFa/repo/dsci471/logs/autoencoder_64/run_20250521-230946/checkpoints/best_autoencoder_val_loss_new.keras"
+MODEL_PATH = "/mnt/c/Users/NesFa/repo/dsci471/logs/autoencoder/20250521-230946/checkpoints/best_autoencoder_val_loss.keras"
 SAVE_HIST_PATH = "/mnt/c/Users/NesFa/repo/dsci471/results"
 IMAGE_SHAPE = (224, 320, 1)
 BATCH_SIZE = 32 
@@ -57,7 +57,9 @@ def load_validation_normal_data(
             image_size=(458, 280),
             shuffle=False,
             to_rgb=False,
-            binary_class=True, 
+            binary_class=True,
+            crop_image=True,
+            equalize=True,
             with_class=0 # Filter for normal images only for calculating threshold
         ),
         output_signature=(
@@ -141,7 +143,7 @@ def main():
     cm = confusion_matrix(all_test_labels_np, predicted_anomalies)
     print(cm)
 
-    histogram_save_path = os.path.join(SAVE_HIST_PATH, "test_reconstruction_errors_histogram.png")
+    histogram_save_path = os.path.join(SAVE_HIST_PATH, "test_reconstruction_errors_histogram2.png")
     plot_reconstruction_error_histogram(
         test_reconstruction_errors,
         all_test_labels_np,

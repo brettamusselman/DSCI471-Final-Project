@@ -12,7 +12,7 @@ import datetime
 logger = logging.getLogger(__name__)
 
 # Define the CNN model
-class CNN_Model():
+class CNN_Model(): #Ended up scrapping this model and not using it
     def __init__(self, input_shape: Tuple[int, int, int], num_classes: int):
         """
         Initialize the CNN model.
@@ -67,7 +67,7 @@ class CNN_Model():
             logger.error(f"Error compiling CNN model: {e}")
             raise
 
-    def train_model(self, train_data: tf.data.Dataset, validation_data: tf.data.Dataset, epochs: int = 10, log_dir: str = "logs"):
+    def train_model(self, train_data: tf.data.Dataset, validation_data: tf.data.Dataset, epochs: int = 10, log_dir: str = "logs", steps_per_epoch=100):
         """
         Train the CNN model with early stopping and TensorBoard callbacks.
 

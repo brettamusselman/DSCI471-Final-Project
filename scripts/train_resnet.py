@@ -5,7 +5,7 @@ import pandas as pd
 from tensorflow.keras import layers
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..")))
 
-from model.resnet_model_basic import ResNet_Model
+from model.resnet_model import ResNet_Model
 from data_loader import csv_image_label_generator
 
 data_augmentation_pipeline = tf.keras.Sequential([
@@ -42,7 +42,7 @@ def main():
     csv_path = "data/all_files_df.csv"
 
     df = pd.read_csv(csv_path)
-    num_classes = 1#df["label_two"].nunique()
+    num_classes = df["label_two"].nunique()
 
     train_data = load_dataset(csv_path, split="train")
     val_data = load_dataset(csv_path, split="val")
@@ -52,7 +52,7 @@ def main():
     model.compile_model(
         optimizer_name='adam', 
         learning_rate=0.001,
-        loss='binary_crossentropy',
+        loss='categorical_crossentropy',
         # metrics=['accuracy', 'precision', 'recall']
         metrics=[tf.keras.metrics.categorical_accuracy, 
                  tf.keras.metrics.Precision(class_id=0, name="normal_precision"),
