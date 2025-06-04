@@ -1,2 +1,0 @@
-No GPU detected. Training will run on CPU.
-Epoch 1/20
